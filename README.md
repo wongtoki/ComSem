@@ -3,6 +3,8 @@ The repository contains scripts that are provided in the [Computational Semantic
 
 ## Comparing tok.off files (`tok_off_compare.py`)
 
+The script compares tok.off files. First the files are converted into TOIS-annotation format (i.e. each character is labeled with `T`oken start, `O`utside a token, `I`n token, or `S`entence start) and then a confusion matrix of these two annotations is built. More details about the TOIS-annotation can be found in [Elephant paper](http://aclweb.org/anthology/D/D13/D13-1146.pdf)
+
 The script `tok_off_compare.py` can be used in two ways: 
 1. Compare **two concrete tok.off files** (i.e. files formatted as `en.tok.off`) and get the confusion matrix over `T` `O` `I` `S` labels.
 It also expects that a raw file is provided. 
