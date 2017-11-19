@@ -64,9 +64,20 @@ By default `verbosity=0` and only the progress counter will be shown with the fi
        I           0       0  145412       0
        S           0       0       0    3727
    ```
+### Notes ###
+- The script does not check validity of your tok.off files.
+- If you *slightly mess up* token IDs in your tok.off file the script will close eyes on it (a side effect). 
+For example, if the tok.off has the fragment below, `101 106 1017 birds` will not cause an error and it will be treated as if there was `101 106 1018 birds`.
+   ```
+   97 100 1017 sea
+   101 106 1017 birds
+   107 113 1019 killed
+   ```
+   Though character offsets and a sentence ID is taken very seriously!
 
+### System requirements ###
 ```
-The provided code is tested on Ubuntu with python 2.7.6
+The provided code is tested on Ubuntu with python 2.7.6.
 It should work for any python of version 2.6 or 2.7.
 ```
 
