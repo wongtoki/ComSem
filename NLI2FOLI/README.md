@@ -29,7 +29,7 @@ Read help on how to run NLI2FOLI:
 $ python3 nli2foli.py  --help
 ```
 
-Run NLI2FOLI for the trial part of SICK, with verbosity 1, and write predictions in a file (`pmb_SICK` extracted from `pmb_SICK.zip`):
+Run NLI2FOLI for the trial part of SICK, with verbosity 1, and write predictions in a file (`pmb_SICK` is extracted from `pmb_SICK.zip`):
 ```
 $ python3 nli2foli.py  --pmb pmb_SICK/  --sick SICK/SICK_trial.txt  --sick2pd sick2pd.json  --out trial.ans  -v 1
 ```
