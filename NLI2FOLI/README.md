@@ -31,7 +31,7 @@ $ python3 nli2foli.py  --help
 
 Run NLI2FOLI for the trial part of SICK, with verbosity 1, and write predictions in a file (`pmb_SICK` is extracted from `pmb_SICK.zip`):
 ```
-$ python3 nli2foli.py  --pmb pmb_SICK/  --sick SICK/SICK_trial.txt  --sick2pd sick2pd.json  --out trial.ans  -v 1
+$ python3 nli2foli.py  --pmb pmb_SICK/  --sick SICK/SICK_trial.txt  --sick2pd sick2pd.json  --out predictions/trial.ans  -v 1
 ```
 
 It is possible to run NLI2FOLI for the problems with certain IDs and manually encode knowledge axioms for the problems:
@@ -71,5 +71,5 @@ $ python3 nli2foli.py --pmb pmb_SICK/ --sick SICK/SICK_train.txt --sick2pd sick2
 
 For evaluation, run the following, which allows to print problems with a certain combination of gold and predicted labels:
 ```
-$ python3 sick_eval.py  --sick SICK/SICK_trial.txt  --pred trial.ans  --filter CE
+$ python3 sick_eval.py  --sick SICK/SICK_trial.txt  --pred predictions/trial.ans  --filter CE
 ```
