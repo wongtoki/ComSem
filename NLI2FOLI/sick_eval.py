@@ -45,6 +45,10 @@ def read_system_predictions(file_path):
 def confusion_matrix_scores(gold_labs, pred_labs, scores=True):
     '''Draw a confusion matrix and calculate accuracy, precision and recall scores'''
     # Draw a confusion matrix
+    if not gold_labs or not pred_labs:
+        raise RuntimeError("One of the prediction lists is empty")
+    if len(gold_labs) != len(pred_labs):
+        raise RuntimeError("The number of predictions != the number of gold labels")
     cm = ConfusionMatrix(gold_labs, pred_labs)
     print(cm.pretty_format(show_percents=False))
 
