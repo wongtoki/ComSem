@@ -9,7 +9,9 @@ from sklearn.metrics import *
 
 class Model:
     def __init__(self, data):
-        self.train, self.test = train_test_split(data, test_size=0.2)
+        self.model = None
+        self.train = data
+        self.test = data
         pass
 
     def train_model(self):
@@ -17,7 +19,8 @@ class Model:
         xtrain = self.train["tokens"]
         ytrain = self.train["entailment_judgment"]
 
-        vec = TfidfVectorizer(preprocessor=lambda x: x, tokenizer=lambda x: x)
+        vec = TfidfVectorizer(preprocessor=lambda x: x, tokenizer=lambda x: x, ngram_range=(1,1))
+
         classifier = Pipeline([('vec', vec), ('cls', LinearSVC(C=1))])
         classifier.fit(xtrain, ytrain)
         self.model = classifier
@@ -32,8 +35,19 @@ class Model:
         else:
             print("Model not trained.")
 
+    def set_model(self, model):
+        self.model = model
+
+    def get_model(self):
+        return self.model
+
 
 if __name__ == "__main__":
     model = Model(Loader.load_data("../NLI2FOLI/SICK/SICK_train.txt"))
+    testModel = Model(Loader.load_data("../NLI2FOLI/SICK/SICK_trial.txt"))
+    
     model.train_model()
-    model.test_model()
+
+    testModel.set_model(model.get_model())
+    testModel.test_model()
+    
