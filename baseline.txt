@@ -1,3 +1,4 @@
+--Train w/out 5 hard-coded examples:--
   |    C    E    N |
 --+----------------+
 C |  <14>   1  650 |
@@ -8,3 +9,32 @@ N |    .    6<2530>|
 Accuracy: 64.67%
 Precision: 97.94%
 Recall: 19.35%
+
+
+--Trial w/out 5 hard-coded examples:--
+  |   C   E   N |
+--+-------------+
+C |  <1>  1  72 |
+E |   . <44>100 |
+N |   .   .<282>|
+--+-------------+
+(row = reference; col = test)
+
+Accuracy: 65.40%
+Precision: 97.83%
+Recall: 20.64%
+
+
+Trial w/ 5 hard-coded examples:
+
+  |   C   E   N |
+--+-------------+
+C |  <2>  1  71 |
+E |   . <46> 98 |
+N |   .   .<282>|
+--+-------------+
+(row = reference; col = test)
+
+Accuracy: 66.00%
+Precision: 97.96%
+Recall: 22.02%
