@@ -72,7 +72,7 @@ class Model:
 
     def train_model(self):
         classifier = Pipeline(
-            [('vec', self.vectorizer), ('cls', SVC(kernel="sigmoid"))])
+            [('vec', self.vectorizer), ('cls', RandomForestClassifier(n_estimators=1000))])
         classifier.fit(self.xtrain, self.ytrain)
         self.model = classifier
 
@@ -95,12 +95,11 @@ if __name__ == "__main__":
 
     from gensim.models import KeyedVectors
 
-    print("loading word embeddings...")
-    embs = KeyedVectors.load_word2vec_format(
-        "../crawl-300d-2M.vec/crawl-300d-2M.vec")
+    # print("loading word embeddings...")
+    # embs = KeyedVectors.load_word2vec_format(
+    #     "../crawl-300d-2M.vec/crawl-300d-2M.vec")
 
     model = Model(Loader.load_data("../NLI2FOLI/SICK/SICK_train.txt"),
-                  embeddings=embs,
-                  vectorizer=MeanEmbeddingVectorizer())
+                  vectorizer=CountVectorizer(tokenizer=lambda x: x, preprocessor=lambda x: x))
 
     model.justRun()
