@@ -39,6 +39,9 @@ from knowledge import wn_axioms
 from nltk import ConfusionMatrix
 from nltk.sem import Expression as semexp
 
+from nltk.sentiment.util import mark_negation
+from nltk.sentiment.vader import negated
+
 #################################
 def parse_arguments():
     '''Read arguments from a command line'''
@@ -169,6 +172,22 @@ if __name__ == '__main__':
         prem_fol, hypo_fol = [ pmb2fol(args.pmb, pd, sig=signature, drawDRS=args.draw_DRS)\
                                for pd in sick2pd[p[0]] ]
         pred, details = solve_fol_inference(prem_fol, hypo_fol, str_axioms=kb.get(p[0],[]))
+
+        premis = p[-2].split()
+        hypothesis = p[-1].split()
+        premis_neg = mark_negation(premis)
+        hypo_neg = mark_negation(hypothesis)
+        for premis_token, hypo_token in zip(premis_neg, hypo_neg):
+            if premis_token.endswith('_NEG') or hypo_token.endswith('NEG'):
+                # using the sentiment.util package for token-level negation
+                pred = 'CONTRADICTION'
+
+
+        if negated(premis) or negated(hypothesis):
+            # using the sentiment.vader package for boolean
+            pred = 'CONTRADICTION'
+        
+
         # printing and recording answers
         eureka = "Eureka!!!" if pred == p[1] and pred != 'NEUTRAL' else ''
         info("Result for {:>4}: {} vs {} ({}) {}".format(p[0], p[1], pred.lower(), details, eureka))
