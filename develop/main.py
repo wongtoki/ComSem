@@ -50,9 +50,6 @@ class Model:
 
             self.data["embs"] = embs
 
-    def __load_word_embs(self):
-        pass
-
     def justRun(self, test_size=0.2):
         """Split the data, train the data, and test the data in one line."""
 
@@ -86,6 +83,12 @@ class Model:
             print(classification_report(self.ytest, pred))
         else:
             print("Model not trained.")
+
+    def set_model(self, model):
+        self.model = model
+
+    def get_model(self):
+        return self.model
 
 
 if __name__ == "__main__":

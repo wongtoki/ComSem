@@ -114,3 +114,6 @@ node_modules/
 data_files
 .__pycache__
 .vscode/
+
+#Others
+crawl-300d-2M.vec/crawl-300d-2M.vec
