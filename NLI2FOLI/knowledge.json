@@ -1,4 +1,14 @@
 {
+
 "1909": ["all x.(polish_v01(x) -> clean_v01(x))"],
- "953": ["all x.(toddler_n01(x) -> child_n01(x) & some s. (Attribute(x,s) & young_a01(s)))"]
+"953": ["all x.(toddler_n01(x) -> child_n01(x) & some s. (Attribute(x,s) & young_a01(s)))"],
+
+"384": ["all x.(grass_n01(x) -> field_n01(x) & some s3. (Attribute(x,s3) & tall_a01(s3)) & some s4. (Attribute(x, s4) & green_a01(s4)))"],
+"2557": ["all e.(strum_v01(e) -> play_v07(e))"],
+"208933": ["all e.-(grant_v01(e) -> deny_v01(e))"],
+"2089": ["all e.(grant_v01(e) -> all e.(deny_v01(e)))"],
+"592": ["all e.-(conceal_v01(e) -> reveal_v01(e)) & all e2.-(take_v01(e2) -> put_v01(e2))"]
+
+
+
 }
