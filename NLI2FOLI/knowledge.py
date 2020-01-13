@@ -20,17 +20,17 @@ def wn_axioms(formulas):
     dict_ss_pred = dict_synset_pred(formulas)
     synsets = set(dict_ss_pred.keys())
 
-    extra_hypernym_axioms = get_more_hypernym_axioms(synsets, dict_ss_pred)
-    antonym_axioms = get_antonym_axioms(synsets, dict_ss_pred) # synonyms and antonyms
+    # extra_hypernym_axioms = get_more_hypernym_axioms(synsets, dict_ss_pred)
+    # antonym_axioms = get_antonym_axioms(synsets, dict_ss_pred) # synonyms and antonyms
     hypernym_axioms = get_hypernym_axioms(synsets, dict_ss_pred)
 
-    axioms.update(extra_hypernym_axioms)
-    axioms.update(antonym_axioms)
+    # axioms.update(extra_hypernym_axioms)
+    # axioms.update(antonym_axioms)
     axioms.update(hypernym_axioms)
 
     return list(axioms)
 
-
+#################################
 def get_more_hypernym_axioms(synsets, ss_pred):
     """Detect more hypernym relations for each synset pair
 
@@ -52,6 +52,7 @@ def get_more_hypernym_axioms(synsets, ss_pred):
                     # Got one: Synset('watch.v.01') Synset('look.v.01')
                     axiom = "all x.({}(x) -> {}(x))".format(ss_pred[ss1], ss_pred[entailment])
                     axiom = semexp.fromstring(axiom)
+                    print("ENTAILMENT", axiom)
                     axioms.add(axiom)
 
         if ss1.part_meronyms():
@@ -60,8 +61,8 @@ def get_more_hypernym_axioms(synsets, ss_pred):
                 if meronym in synsets:
                     # only if the meronym is another synset that occurs in the FOL formulas
                     axiom = "all x.({}(x) -> {}(x))".format(ss_pred[meronym], ss_pred[ss1])
-                    print("MERONYM: ", axiom)
                     axiom = semexp.fromstring(axiom)
+                    print("MERONYM: ", axiom)
                     axioms.add(axiom)
 
 
@@ -75,8 +76,8 @@ def get_more_hypernym_axioms(synsets, ss_pred):
                     axiom = semexp.fromstring(axiom)
                     axioms.add(axiom)
 
-        '''
-        #TODO: I need the p.names for each synset, which I do not know how to get, so 
+    # TODO: I need the p.names for each synset, which I do not know how to get, so...
+    for ss1 in synsets:
         for ss2 in synsets:
             lowest_hypernym = ss1.lowest_common_hypernyms(ss2)
             if ss1 != ss2 and lowest_hypernym:
@@ -89,19 +90,29 @@ def get_more_hypernym_axioms(synsets, ss_pred):
                         # checks if they are similar according to similarity measure of WordNet
                     # print("{0} and {1} in common: {2} ({3})".format(ss1, ss2, ss1.lowest_common_hypernyms(ss2), ss1.path_similarity(ss2)))
 
+                    string_synset = str(lowest_hypernym[0]).split("'")[1]
+                    predicate_li = string_synset.split('.')
+                    predicate = "{0}_{1}{2}".format(*predicate_li)
+
                     # # Synset('road.n.01') and Synset('street.n.02') in common: [Synset('road.n.01')](0.3333333333333333)
-                    # axiom = "all x.({}(x) -> {}(x))".format(ss_pred[ss1], ss_pred[lowest_hypernym[0]])
-                    # print("LOWEST COMMON 1: ", axiom)
-                    # axiom = semexp.fromstring(axiom)
-                    # axioms.add(axiom)
-                    #
-                    # axiom = "all x.({}(x) -> {}(x))".format(ss_pred[ss2], ss_pred[lowest_hypernym[0]])
-                    # print("LOWEST COMMON 2: ", axiom)
-                    # axiom = semexp.fromstring(axiom)
-                    # axioms.add(axiom)
-        '''
+                    try:
+                        axiom = "all x.({}(x) -> {}(x))".format(ss_pred[ss1], predicate)
+                        axiom = semexp.fromstring(axiom)
+                        axioms.add(axiom)
+
+                        axiom = "all x.({}(x) -> {}(x))".format(ss_pred[ss2], predicate)
+                        axiom = semexp.fromstring(axiom)
+                        axioms.add(axiom)
+
+                        # print("{0} and {1} have {2} in common".format(ss1, ss2, predicate))
+                    except:
+                        pass
+
+    if axioms:
+        print("EXTRA HYPERNYMS", axioms)
 
     return axioms
+
 
 #################################
 def get_antonym_axioms(synsets, ss_pred):
@@ -115,6 +126,8 @@ def get_antonym_axioms(synsets, ss_pred):
     :return: antonym axioms for each synsets
     """
     axioms = set()
+    antonym_already_used = set()
+
     for ss in synsets:
         for lemma in ss.lemmas():
 
@@ -127,11 +140,16 @@ def get_antonym_axioms(synsets, ss_pred):
             # antonym relations are captured in lemmas, not in synsets
             for antonym_lemma in lemma.antonyms():
                 antonym = antonym_lemma.synset() # return lemma form to synset form
-                if antonym in ss_pred.keys():
+                if antonym in ss_pred.keys() and antonym not in antonym_already_used:
                     # only if the antonym occurs in the set of synsets form the formulas do we append it
+                    # only if the antonym-relation has not already been added previously
                     axiom = "all x.-({}(x) -> {}(x))".format(ss_pred[ss], ss_pred[antonym])
+                    antonym_already_used.add(ss) # add antonym so it cannot be re-used
                     axiom = semexp.fromstring(axiom)
                     axioms.add(axiom)
+
+    if axioms:
+        print("ANTONYMS", axioms)
 
     return axioms
 
@@ -166,6 +184,7 @@ def dict_synset_pred(formulas):
         for p in f.predicates():
             m = re.match('([a-z]+)_([vnar])(\d\d)$', p.name)
             if m:
+                # print(m, p.name)
                 ss = "{}.{}.{}".format(*m.groups())
                 try:
                     ss_pred[wn.synset(ss)] = p.name
