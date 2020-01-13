@@ -1,4 +1,7 @@
---Train w/out 5 hard-coded examples:--
+################################################################
+Train
+
+## Baseline ##
   |    C    E    N |
 --+----------------+
 C |  <14>   1  650 |
@@ -10,8 +13,65 @@ Accuracy: 64.67%
 Precision: 97.94%
 Recall: 19.35%
 
+## With nltk.mark_negation() ##
+  |    C    E    N |
+--+----------------+
+C | <564>   1  100 |
+E |   10 <362> 927 |
+N |  377    5<2154>|
+--+----------------+
+(row = reference; col = test)
 
---Trial w/out 5 hard-coded examples:--
+Accuracy: 68.44%
+Precision: 70.20%
+Recall: 47.15%
+
+## With nltk.mark_negation() and nltk.mark_negated() ##
+  |    C    E    N |
+--+----------------+
+C | <578>   1   86 |
+E |   10 <366> 923 |
+N |  400    6<2130>|
+--+----------------+
+(row = reference; col = test)
+
+Accuracy: 68.31%
+Precision: 69.36%
+Recall: 48.07%
+
+
+## With nltk.mark_negation and get_antonym_axioms() ##
+  |    C    E    N |
+--+----------------+
+C | <568>   1   96 |
+E |   14 <362> 923 |
+N |  507    5<2024>|
+--+----------------+
+(row = reference; col = test)
+
+Accuracy: 65.64%
+Precision: 63.83%
+Recall: 47.35%
+
+
+## With nltk.mark_negation() and get_antonym_axioms() and get_more_hypernym_axioms() ##
+  |    C    E    N |
+--+----------------+
+C | <567>   1   97 |
+E |   14 <364> 921 |
+N |  519    5<2012>|
+--+----------------+
+(row = reference; col = test)
+
+Accuracy: 65.40%
+Precision: 63.33%
+Recall: 47.40%
+
+
+################################################################
+Trial
+
+## Without 5 hard-coded examples ##
   |   C   E   N |
 --+-------------+
 C |  <1>  1  72 |
@@ -25,8 +85,7 @@ Precision: 97.83%
 Recall: 20.64%
 
 
-Trial w/ 5 hard-coded examples:
-
+## With 5 hard-coded examples ##
   |   C   E   N |
 --+-------------+
 C |  <2>  1  71 |
@@ -38,3 +97,17 @@ N |   .   .<282>|
 Accuracy: 66.00%
 Precision: 97.96%
 Recall: 22.02%
+
+
+## with 5 hard-coded examples and nltk.mark_negation() ##
+  |   C   E   N |
+--+-------------+
+C | <64>  1   9 |
+E |   . <46> 98 |
+N |  33   .<249>|
+--+-------------+
+(row = reference; col = test)
+
+Accuracy: 71.80%
+Precision: 76.39%
+Recall: 50.46%
