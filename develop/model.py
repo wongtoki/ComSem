@@ -3,11 +3,14 @@ import random
 import numpy as np
 from dataloader import Loader
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import *
 import nltk
+from nltk.sentiment.util import mark_negation
+from nltk.sentiment.vader import negated
+from nltk.corpus import wordnet as wn
 
 
 class Model:
@@ -30,6 +33,9 @@ class Model:
 
 class FeatureExtractor:
 
+    def __init__(self):
+        pass
+
     @staticmethod
     def postagger(data):
         new_data = []
@@ -44,6 +50,45 @@ class FeatureExtractor:
 
     @staticmethod
     def ccgtransformer(data):
+        pass
+
+    @staticmethod
+    def negation_tagger(sentences):
+        """Tags negation for list of tokens that comprises of a sentence
+
+        :param list sentences: the premise or hypothesis
+        :rtype: list
+        :return: "_NEG" appended for tokens within negation's scope
+        """
+        return [mark_negation(sent) for sent in sentences]
+
+    @staticmethod
+    def bool_negation_tagger(sentences):
+        """Tags negation for a sentence (not a list of tokens)
+
+        :param list sentences: the premise or hypothesis
+        :rtype: list
+        :return: True for sentences that contain negation, otherwise False
+        """
+        tagged_data = []
+        for sent in sentences:
+            # preferably the sentences are not tokenized
+            if isinstance(sent, str):
+                tagged_data.append(negated(sent))
+
+            elif isinstance(sent, list):
+                sent = " ".join(sent) # if sentences are tokenized, join the tokens by whitespace
+                tagged_data.append(negated(sent))
+
+        return tagged_data
+
+
+    @staticmethod
+    def antonym_relations():
+        pass
+
+    @staticmethod
+    def synonym_relations(sentences):
         pass
 
 
