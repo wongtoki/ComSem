@@ -37,7 +37,8 @@ class FeatureExtractor:
             new_tokens = []
             tags = nltk.pos_tag(tokens)
             for tag in tags:
-                new_tokens.append(str(tag[0]+"_"+tag[1]).lower())
+                new_tokens.append(tag[0].lower())
+                new_tokens.append(tag[1])
 
             new_data.append(new_tokens)
         return new_data
