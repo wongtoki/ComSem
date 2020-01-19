@@ -50,7 +50,7 @@ class FeatureExtractor:
         sent = nltk.pos_tag(sentence)
         tokens = []
         for token in sentence:
-            tokens.append()gi
+            tokens.append()
 
     @staticmethod
     def ccgtransformer(data):
