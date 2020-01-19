@@ -113,7 +113,7 @@ def pmb2fol(pmb_dir, pd, sig=None, drawDRS=False):
     return fol
 
 ################################
-def solve_fol_inference(prem_fol, hypo_fol, str_axioms=[], prover=Prover9(timeout=5)):
+def solve_fol_inference(prem_fol, hypo_fol, str_axioms=[], prover=Prover9(timeout=5), p_number=0):
     '''Given FOL formulas of a premise and a hypothesis,
        extract relevant knowledge axioms from WordNet, and solve the inference
     '''
@@ -122,7 +122,7 @@ def solve_fol_inference(prem_fol, hypo_fol, str_axioms=[], prover=Prover9(timeou
         return 'NEUTRAL', 'No closed formulas'
     # retrieve knowledge from WordNet based on the predicates found in the formulas
     axioms = [ semexp.fromstring(a) for a in str_axioms ]
-    axioms = axioms + wn_axioms([prem_fol, hypo_fol])
+    axioms = axioms + wn_axioms([prem_fol, hypo_fol], p_number)
     if axioms:
         info("Extracted axioms: {}".format(axioms))
     info("Premise Formula: {}".format(prem_fol))
@@ -171,7 +171,8 @@ if __name__ == '__main__':
         # get FOL formulas for the corresponding PMB documents (done via building a DRS from a clausal form)
         prem_fol, hypo_fol = [ pmb2fol(args.pmb, pd, sig=signature, drawDRS=args.draw_DRS)\
                                for pd in sick2pd[p[0]] ]
-        pred, details = solve_fol_inference(prem_fol, hypo_fol, str_axioms=kb.get(p[0],[]))
+
+        pred, details = solve_fol_inference(prem_fol, hypo_fol, str_axioms=kb.get(p[0],[]), p_number=p[0])
 
         premis = p[-2].split()
         hypothesis = p[-1].split()
@@ -186,7 +187,7 @@ if __name__ == '__main__':
         if negated(premis) or negated(hypothesis):
             # using the sentiment.vader package for boolean
             pred = 'CONTRADICTION'
-        
+
 
         # printing and recording answers
         eureka = "Eureka!!!" if pred == p[1] and pred != 'NEUTRAL' else ''
