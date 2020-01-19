@@ -14,11 +14,22 @@ from nltk.sem import Expression as semexp
 
 
 #################################
-def wn_axioms(formulas):
+def wn_axioms(formulas, p_number):
     '''Get axioms from WordNet for the predicates found in formulas'''
     axioms = set()
     dict_ss_pred = dict_synset_pred(formulas)
     synsets = set(dict_ss_pred.keys())
+
+    '''Get all synsets to a .csv file
+    with open("wordnet_synsets.csv", "a") as wn_file:
+        ss = ""
+        for key, value in dict_ss_pred.items():
+            wn = str(key)
+            wn = wn.split("'")[1]
+            ss += wn + ","
+        string = "{0}|{1}\n".format(p_number, ss)
+        wn_file.write(string)
+    '''
 
     # extra_hypernym_axioms = get_more_hypernym_axioms(synsets, dict_ss_pred)
     # antonym_axioms = get_antonym_axioms(synsets, dict_ss_pred) # synonyms and antonyms
