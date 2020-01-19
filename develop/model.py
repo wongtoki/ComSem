@@ -140,7 +140,6 @@ class Helper:
     def generate_postag_data(documents):
         x = []
         for tokens in documents:
-
             tags = []
             tagged = nltk.pos_tag(tokens.split())
             for token in tagged:
@@ -219,12 +218,6 @@ if __name__ == "__main__":
     test = Loader.load_data("../NLI2FOLI/SICK/SICK_trial.txt")
 
     model = Model(data)
-
-    model.x = FeatureExtractor.antonym_relations(model.x)
-    test_x = FeatureExtractor.antonym_relations(test["tokens"])
-
-    exit()
-
 
     encoder = Helper.generate_postag_onehot(data["tokens"])
     data["pos_A"] = Helper.generate_postag_data(data["sentence_A"])
