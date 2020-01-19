@@ -50,7 +50,7 @@ class FeatureExtractor:
         sent = nltk.pos_tag(sentence)
         tokens = []
         for token in sentence:
-            tokens.append()
+            tokens.append()gi
 
     @staticmethod
     def ccgtransformer(data):
@@ -88,12 +88,40 @@ class FeatureExtractor:
         return tagged_data
 
     @staticmethod
-    def antonym_relations():
-        pass
+    def antonym_relations(sentences):
+        wn_synsets = get_synsets("wordnet_synsets.csv")
+        all_antonyms = []
+
+        for pairID, sent in enumerate(sentences.tokens):
+            pairID = str(pairID + 1)
+
+            if pairID in wn_synsets.keys():
+                all_synsets = wn_synsets[pairID]
+                antonyms = []
+                antonym_already_used = set()
+
+                for ss in wn_synsets[str(pairID)]:
+                    for lemma in ss.lemmas():
+                        # antonym relations are captured in lemmas, not in synsets
+                        for antonym_lemma in lemma.antonyms():
+                            antonym = antonym_lemma.synset()  # return lemma form to synset form
+                            if antonym in all_synsets and antonym not in antonym_already_used:
+                                # only if the antonym occurs in the set of synsets form the formulas do we append it
+                                # only if the antonym-relation has not already been added previously
+                                antonym = (ss, antonym)
+                                antonym_already_used.add(ss)  # add antonym so it cannot be re-used
+                                antonyms.append(antonym)
+
+                all_antonyms.append(antonyms)
+            else:
+                all_antonyms.append([])
+
+        return all_antonyms
 
     @staticmethod
     def synonym_relations(sentences):
         pass
+
 
 
 class Helper:
@@ -124,8 +152,9 @@ class Helper:
     def generate_negation_tags(documents):
         x = []
         for tokens in documents:
-            x.append(mark_negation(tokens.split()))
+            x.append(mark_negation(tokens))
         return x
+
 
 
 class POSTAGTransformer(object):
@@ -161,11 +190,41 @@ class POSTAGTransformer(object):
         return vecs
 
 
+def get_synsets(file):
+    """Create dictionary from .csv file with synsets per problem number
+
+    :param str: .csv file containing the synset stings
+    :rtype: dict
+    :return: dictionary w/ synsets in a list per problem nr
+    """
+    wordnet_ss = {}
+
+    with open(file, "r") as ss_file:
+        for line in ss_file:
+            line = line.split("|")
+            nr = line[0]
+            synsets = line[1].rstrip().split(",")[:-1]
+            wn_synsets = []
+            for ss in synsets:
+                ss = wn.synset(ss)
+                wn_synsets.append(ss)
+
+            wordnet_ss[nr] = wn_synsets
+
+    return wordnet_ss
+
+
 if __name__ == "__main__":
     data = Loader.load_data("../NLI2FOLI/SICK/SICK_train.txt")
     test = Loader.load_data("../NLI2FOLI/SICK/SICK_trial.txt")
 
     model = Model(data)
+
+    model.x = FeatureExtractor.antonym_relations(model.x)
+    test_x = FeatureExtractor.antonym_relations(test["tokens"])
+
+    exit()
+
 
     encoder = Helper.generate_postag_onehot(data["tokens"])
     data["pos_A"] = Helper.generate_postag_data(data["sentence_A"])
@@ -189,8 +248,8 @@ if __name__ == "__main__":
 
     model.add_feature(transformer, "Sentences")
 
-    model.add_feature(POSTAGTransformer(encoder, "pos_A"), "PostagsA")
-    model.add_feature(POSTAGTransformer(encoder, "pos_B"), "PostagsB")
+    # model.add_feature(POSTAGTransformer(encoder, "pos_A"), "PostagsA")
+    # model.add_feature(POSTAGTransformer(encoder, "pos_B"), "PostagsB")
 
     model.train_model()
 
