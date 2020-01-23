@@ -215,15 +215,14 @@ class NEGTransformer(object):
 
 
 class DumbTransfrom(object):
-    def __init__(self, column):
-        self.column = column
+    def __init__(self):
         pass
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X, y=None):
-        return X[self.column]
+        return X
 
 
 def get_synsets(file):
@@ -256,19 +255,20 @@ if __name__ == "__main__":
 
     model = Model(data)
 
-    print(FeatureExtractor.antonym_relations(data["pair_ID"]))
-
-    exit()
-
     encoder = FeatureExtractor.generate_postag_onehot(data["tokens"])
 
     data["postags"] = FeatureExtractor.postag_tokenizer(data["tokens"])
     test["postags"] = FeatureExtractor.postag_tokenizer(test["tokens"])
 
+    data["antons"] = FeatureExtractor.antonym_relations(data["pair_ID"])
+    test["antons"] = FeatureExtractor.antonym_relations(test["pair_ID"])
+
     transformer = ColumnTransformer(
         [("A", TfidfVectorizer(), "sentence_A"),
          ("B", TfidfVectorizer(), "sentence_B"),
-         ("POS", CountVectorizer(tokenizer=lambda x:x, preprocessor=lambda x:x), "postags")])
+         ("POS", CountVectorizer(tokenizer=lambda x:x,
+                                 preprocessor=lambda x:x), "postags"),
+         ("ATONS", DumbTransfrom(), "antons")])
 
     model.add_feature(transformer, "bags")
     model.add_feature(POSTAGTransformer(encoder, "sentence_A"), "pos_a")
