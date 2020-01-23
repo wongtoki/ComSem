@@ -67,23 +67,32 @@ def test():
         test["tokens"], test["pair_ID"])
 
     # Features
+    # You don't have to do anything here
+    # These are all the features we have
 
+    # The tfidf features with both sentences seperated
     bag_of_words = ColumnTransformer([("A", TfidfVectorizer(), "sentence_A"),
                                       ("B", TfidfVectorizer(), "sentence_B")])
 
+    # The countvectorizer features with postagging appended to each token
     bag_of_words_plus_pos = ColumnTransformer([("POS", CountVectorizer(
         tokenizer=lambda x:x, preprocessor=lambda x:x), "postags")])
 
+    # The One-hot-encoded postag features for both sentences
     postags_A = POSTAGTransformer(encoder, "sentence_A", maxlen=800)
     postags_B = POSTAGTransformer(encoder, "sentence_B", maxlen=800)
 
+    # The negation features for both sentences
     negation_A = NEGTransformer("sentence_A")
     negation_B = NEGTransformer("sentence_B")
 
+    # The antonyms and synonyms features
     antons = DumbTransfromer("antons")
     synons = DumbTransfromer("synons")
 
     # classifiers
+    # Every classifiers should be put in a tuple with its name on the right hand side
+    # You may tweak the hyperparameters
 
     nb = (MultinomialNB(), "Naive Bayes")
     knn = (KNeighborsClassifier(), "KNN")
@@ -91,7 +100,8 @@ def test():
     forest = (RandomForestClassifier(), "Random Forest")
 
     # Feature_combs
-
+    # Feature combinations are a list of tuples
+    # Give the combination a name on the right hand side
     combs = [
         ([bag_of_words], "TFIDF"),
         ([bag_of_words_plus_pos], "Combined + Postagging"),
@@ -102,6 +112,9 @@ def test():
           negation_B, antons, synons], "All features")
     ]
 
+    # The seach function takes the combination, classifier list and the train test data.
+    # The result will be printed and exported to a csv file called search result
+    # It also returns the dictionary of all the accuracys
     search(combs, [nb, knn, svm, forest], data, test)
 
 

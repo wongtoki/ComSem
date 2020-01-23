@@ -117,3 +117,4 @@ data_files
 
 #Others
 crawl-300d-2M.vec/crawl-300d-2M.vec
+develop/search_result.csv
