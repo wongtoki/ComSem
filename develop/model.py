@@ -214,15 +214,20 @@ class NEGTransformer(object):
         return vecs
 
 
-class DumbTransfrom(object):
-    def __init__(self):
-        pass
+class DumbTransfromer(object):
+    def __init__(self, column):
+        self.column = column
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X, y=None):
-        return X
+
+        vecs = []
+        for d in X[self.column]:
+            vecs.append(d)
+
+        return vecs
 
 
 def get_synsets(file):
@@ -267,14 +272,15 @@ if __name__ == "__main__":
         [("A", TfidfVectorizer(), "sentence_A"),
          ("B", TfidfVectorizer(), "sentence_B"),
          ("POS", CountVectorizer(tokenizer=lambda x:x,
-                                 preprocessor=lambda x:x), "postags"),
-         ("ATONS", DumbTransfrom(), "antons")])
+                                 preprocessor=lambda x:x), "postags")])
 
     model.add_feature(transformer, "bags")
     model.add_feature(POSTAGTransformer(encoder, "sentence_A"), "pos_a")
     model.add_feature(POSTAGTransformer(encoder, "sentence_B"), "pos_b")
     model.add_feature(NEGTransformer("sentence_A"), "neg_A")
     model.add_feature(NEGTransformer("sentence_B"), "neg_B")
+
+    model.add_feature(DumbTransfromer("antons"), "antons")
 
     model.train_model(MultinomialNB())
     model.test_model(test, test["entailment_judgment"])
