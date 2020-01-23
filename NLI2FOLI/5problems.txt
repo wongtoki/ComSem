@@ -1,0 +1,10 @@
+We identified five problems and added rules for 592, 384, 2557, 3711, and 8263. We figured out that the entailment sentences that were misclassified as neutral were misclassified, because the model did not map meanings (in 384, tall green grass corresponds with field and in 2557, strumming is a kind of playing). In the same way, sentences with contradictions were sometimes misclassified as neutral, because the model was not aware of opposite meanings (in 592 conceal versus reveal, in 3711 strike versus miss, and in 8263 crowded versus empty).
+
+
+"384": ["all x.(grass_n01(x) -> field_n01(x) & some s3. (Attribute(x,s3) & tall_a01(s3)) & some s4. (Attribute(x, s4) & green_a01(s4)))"],
+"2557": ["all e.(strum_v01(e) -> play_v07(e))"],
+"592": ["all e.-(conceal_v01(e) -> reveal_v01(e))"],
+"592": ["all e.-(take_v01(e) -> put_v01(e))"],
+"8263": ["all x.-(crowded_a01(x) -> empty_a01(x))"],
+"3711": ["all x.-(strike_v01(x) -> miss_v01(x))"]
+
