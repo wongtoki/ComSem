@@ -4,8 +4,10 @@ import numpy as np
 from dataloader import Loader
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.metrics import *
 import nltk
@@ -24,10 +26,10 @@ class Model:
     def add_feature(self, transformer, feature_name):
         self.transformers.append((feature_name, transformer))
 
-    def train_model(self):
+    def train_model(self, algo):
         features = FeatureUnion(self.transformers)
         pipe = Pipeline([('features', features),
-                         ('cls', RandomForestClassifier(n_estimators=100))])
+                         ('cls', algo)])
 
         pipe.fit(self.x, self.y)
         self.model = pipe
@@ -39,92 +41,80 @@ class Model:
 
 class FeatureExtractor:
 
-    def __init__(self):
-        pass
+    @staticmethod
+    def postag_tokenizer(x, nosplit=True):
+        X = []
+        for sentence in x:
+            if not nosplit:
+                sentence = sentence.split()
+
+            sent = nltk.pos_tag(sentence)
+            tokens = []
+            for token in sent:
+                tokens.append(token[0]+"_"+token[1])
+            X.append(tokens)
+
+        return X
 
     @staticmethod
-    def add_pos_tags(sentence):
-        print(nltk.help.upenn_tagset())
-
-        sentence = sentence.split()
-        sent = nltk.pos_tag(sentence)
-        tokens = []
-        for token in sentence:
-            tokens.append()
-
-    @staticmethod
-    def ccgtransformer(data):
-        pass
-
-    @staticmethod
-    def negation_tagger(sentences):
+    def negation_tagger(sentence):
         """Tags negation for list of tokens that comprises of a sentence
 
         :param list sentences: the premise or hypothesis
         :rtype: list
         :return: "_NEG" appended for tokens within negation's scope
         """
-        return [mark_negation(sent) for sent in sentences]
+        return mark_negation(sentence)
 
     @staticmethod
-    def bool_negation_tagger(sentences):
+    def bool_negation_tagger(sentence):
         """Tags negation for a sentence (not a list of tokens)
 
         :param list sentences: the premise or hypothesis
         :rtype: list
         :return: True for sentences that contain negation, otherwise False
         """
-        tagged_data = []
-        for sent in sentences:
-            # preferably the sentences are not tokenized
-            if isinstance(sent, str):
-                tagged_data.append(negated(sent))
 
-            elif isinstance(sent, list):
-                # if sentences are tokenized, join the tokens by whitespace
-                sent = " ".join(sent)
-                tagged_data.append(negated(sent))
-
-        return tagged_data
+        return negated(sentence)
 
     @staticmethod
-    def antonym_relations(sentences):
+    def has_antonyms(pairID, wn_synsets):
+
+        if pairID in wn_synsets.keys():
+            all_synsets = wn_synsets[pairID]
+
+            for ss in wn_synsets[str(pairID)]:
+                for lemma in ss.lemmas():
+                    # antonym relations are captured in lemmas, not in synsets
+                    for antonym_lemma in lemma.antonyms():
+                        antonym = antonym_lemma.synset()  # return lemma form to synset form
+                        if antonym in all_synsets:
+                            # only if the antonym occurs in the set of synsets form the formulas do we append it
+                            return [1]
+                return [0]
+        else:
+            return [0]
+
+    @staticmethod
+    def antonym_relations(pairIDs):
         wn_synsets = get_synsets("wordnet_synsets.csv")
-        all_antonyms = []
 
-        for pairID, sent in enumerate(sentences.tokens):
-            pairID = str(pairID + 1)
+        vectors = []
+        for pairID in pairIDs:
+            b = FeatureExtractor.has_antonyms(pairID, wn_synsets)
+            vectors.append(b)
 
-            if pairID in wn_synsets.keys():
-                all_synsets = wn_synsets[pairID]
-                antonyms = []
-                antonym_already_used = set()
-
-                for ss in wn_synsets[str(pairID)]:
-                    for lemma in ss.lemmas():
-                        # antonym relations are captured in lemmas, not in synsets
-                        for antonym_lemma in lemma.antonyms():
-                            antonym = antonym_lemma.synset()  # return lemma form to synset form
-                            if antonym in all_synsets and antonym not in antonym_already_used:
-                                # only if the antonym occurs in the set of synsets form the formulas do we append it
-                                # only if the antonym-relation has not already been added previously
-                                antonym = (ss, antonym)
-                                antonym_already_used.add(ss)  # add antonym so it cannot be re-used
-                                antonyms.append(antonym)
-
-                all_antonyms.append(antonyms)
-            else:
-                all_antonyms.append([])
-
-        return all_antonyms
+        return vectors
 
     @staticmethod
-    def synonym_relations(sentences):
-        pass
+    def grenerate_aton_data(data):
+        relations = []
+        for ID in data["pair_ID"]:
+            relation = FeatureExtractor.antonym_relations(ID)
+            relations.append(relation)
 
+        return relations
 
-
-class Helper:
     @staticmethod
     def generate_postag_onehot(documents):
         X = []
@@ -135,32 +125,16 @@ class Helper:
 
         encoder = OneHotEncoder()
         encoder.fit(X)
+
         return encoder
-
-    def generate_postag_data(documents):
-        x = []
-        for tokens in documents:
-            tags = []
-            tagged = nltk.pos_tag(tokens.split())
-            for token in tagged:
-                tags.append(token[1])
-
-            x.append(tags)
-        return x
-
-    def generate_negation_tags(documents):
-        x = []
-        for tokens in documents:
-            x.append(mark_negation(tokens))
-        return x
-
 
 
 class POSTAGTransformer(object):
-    def __init__(self, encoder, column_name, length=1000):
-        self._encoder = encoder
-        self._column_name = column_name
-        self._length = length
+    def __init__(self, encoder, column, maxlen=1000, nosplit=False):
+        self.encoder = encoder
+        self.maxlen = maxlen
+        self.nosplit = nosplit
+        self.column = column
 
     def fit(self, X, y=None):
         return self
@@ -169,13 +143,21 @@ class POSTAGTransformer(object):
 
         vecs = []
 
-        for tokens in X[self._column_name]:
+        for tokens in X[self.column]:
+            if not self.nosplit:
+                tokens = tokens.split()
+
+            tagged_tokens = nltk.pos_tag(tokens)
+            tokens = []
+            for tagged_token in tagged_tokens:
+                tokens.append(tagged_token[1])
+
             vectors = []
             for tag in tokens:
-                vec = encoder.transform([[tag]]).toarray()
+                vec = self.encoder.transform([[tag]]).toarray()
                 vectors.extend(vec[0])
 
-            diff = self._length - len(vectors)
+            diff = self.maxlen - len(vectors)
             if diff > 0:
                 for n in range(diff):
                     vectors.append(0)
@@ -187,6 +169,61 @@ class POSTAGTransformer(object):
             vecs.append(vectors)
 
         return vecs
+
+
+class NEGTransformer(object):
+    def __init__(self, column, maxlen=50):
+        self.column = column
+        self.maxlen = maxlen
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+
+        maxobj = max(X[self.column], key=len)
+
+        # maxlen = len(maxobj.split())
+        maxlen = self.maxlen
+
+        vecs = []
+        for tokens in X[self.column]:
+            vectors = []
+            negs = FeatureExtractor.negation_tagger(tokens.split())
+
+            for n in negs:
+                if str(n).endswith("NEG"):
+                    vectors.append(1)
+                else:
+                    vectors.append(0)
+
+            if negated(tokens.split()):
+                vectors.append(3)
+            else:
+                vectors.append(4)
+
+            diff = maxlen - len(vectors)
+            if diff > 0:
+                for n in range(diff):
+                    vectors.append(2)
+            elif diff < 0:
+                for n in range(abs(diff)):
+                    vectors.pop()
+
+            vecs.append(vectors)
+        return vecs
+
+
+class DumbTransfrom(object):
+    def __init__(self, column):
+        self.column = column
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        return X[self.column]
 
 
 def get_synsets(file):
@@ -219,31 +256,25 @@ if __name__ == "__main__":
 
     model = Model(data)
 
-    encoder = Helper.generate_postag_onehot(data["tokens"])
-    data["pos_A"] = Helper.generate_postag_data(data["sentence_A"])
-    data["pos_B"] = Helper.generate_postag_data(data["sentence_B"])
+    print(FeatureExtractor.antonym_relations(data["pair_ID"]))
 
-    test["pos_A"] = Helper.generate_postag_data(test["sentence_A"])
-    test["pos_B"] = Helper.generate_postag_data(test["sentence_B"])
+    exit()
 
-    data["neg_A"] = Helper.generate_negation_tags(data["sentence_A"])
-    data["neg_B"] = Helper.generate_negation_tags(data["sentence_B"])
+    encoder = FeatureExtractor.generate_postag_onehot(data["tokens"])
 
-    test["neg_A"] = Helper.generate_negation_tags(test["sentence_A"])
-    test["neg_B"] = Helper.generate_negation_tags(test["sentence_B"])
+    data["postags"] = FeatureExtractor.postag_tokenizer(data["tokens"])
+    test["postags"] = FeatureExtractor.postag_tokenizer(test["tokens"])
 
     transformer = ColumnTransformer(
-        [("A", CountVectorizer(), "sentence_A"),
-         ("B", CountVectorizer(), "sentence_B"),
-         ("NegA", CountVectorizer(tokenizer=lambda x: x,
-                                  preprocessor=lambda x: x), "neg_A"),
-         ("NegB", CountVectorizer(tokenizer=lambda x: x, preprocessor=lambda x: x), "neg_B")])
+        [("A", TfidfVectorizer(), "sentence_A"),
+         ("B", TfidfVectorizer(), "sentence_B"),
+         ("POS", CountVectorizer(tokenizer=lambda x:x, preprocessor=lambda x:x), "postags")])
 
-    model.add_feature(transformer, "Sentences")
+    model.add_feature(transformer, "bags")
+    model.add_feature(POSTAGTransformer(encoder, "sentence_A"), "pos_a")
+    model.add_feature(POSTAGTransformer(encoder, "sentence_B"), "pos_b")
+    model.add_feature(NEGTransformer("sentence_A"), "neg_A")
+    model.add_feature(NEGTransformer("sentence_B"), "neg_B")
 
-    # model.add_feature(POSTAGTransformer(encoder, "pos_A"), "PostagsA")
-    # model.add_feature(POSTAGTransformer(encoder, "pos_B"), "PostagsB")
-
-    model.train_model()
-
+    model.train_model(MultinomialNB())
     model.test_model(test, test["entailment_judgment"])
