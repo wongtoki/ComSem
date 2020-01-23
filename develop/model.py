@@ -14,6 +14,7 @@ import nltk
 from nltk.sentiment.util import mark_negation
 from nltk.sentiment.vader import negated
 from nltk.corpus import wordnet as wn
+from collections import Counter
 
 
 class Model:
@@ -37,6 +38,7 @@ class Model:
     def test_model(self, x, y):
         self.prediction = self.model.predict(x)
         print(classification_report(y, self.prediction))
+        return accuracy_score(y, self.prediction)
 
 
 class FeatureExtractor:
@@ -107,13 +109,38 @@ class FeatureExtractor:
         return vectors
 
     @staticmethod
-    def grenerate_aton_data(data):
-        relations = []
-        for ID in data["pair_ID"]:
-            relation = FeatureExtractor.antonym_relations(ID)
-            relations.append(relation)
+    def has_synonyms(sentence, pairID, wn_synsets):
 
-        return relations
+        if pairID in wn_synsets.keys():
+            all_synsets = wn_synsets[pairID]
+
+            cnt = Counter()
+            for token in sentence:
+                synsets = wn.synsets(token)
+                for ss in synsets:
+                    if ss in all_synsets:
+                        cnt[ss] += 1
+
+            if cnt:
+                for key, value in cnt.items():
+                    if value > 1:
+                        return [1]
+            return [0]
+        return [0]
+
+    @staticmethod
+    def synonym_relations(sentences, pairIDs, nosplit=True):
+        wn_synsets = get_synsets("wordnet_synsets.csv")
+
+        vectors = []
+        for sentence, pairID in zip(sentences, pairIDs):
+            if not nosplit:
+                sentence = sentence.split()
+
+            b = FeatureExtractor.has_synonyms(sentence, pairID, wn_synsets)
+            vectors.append(b)
+
+        return vectors
 
     @staticmethod
     def generate_postag_onehot(documents):
@@ -268,6 +295,11 @@ if __name__ == "__main__":
     data["antons"] = FeatureExtractor.antonym_relations(data["pair_ID"])
     test["antons"] = FeatureExtractor.antonym_relations(test["pair_ID"])
 
+    data["synons"] = FeatureExtractor.synonym_relations(
+        data["tokens"], data["pair_ID"])
+    test["synons"] = FeatureExtractor.synonym_relations(
+        test["tokens"], test["pair_ID"])
+
     transformer = ColumnTransformer(
         [("A", TfidfVectorizer(), "sentence_A"),
          ("B", TfidfVectorizer(), "sentence_B"),
@@ -281,6 +313,7 @@ if __name__ == "__main__":
     model.add_feature(NEGTransformer("sentence_B"), "neg_B")
 
     model.add_feature(DumbTransfromer("antons"), "antons")
+    model.add_feature(DumbTransfromer("synons"), "synons")
 
     model.train_model(MultinomialNB())
     model.test_model(test, test["entailment_judgment"])
