@@ -7,6 +7,6 @@ To run the model
 
 ```
 cd develop
-python3 main.py --pmb pmb_SICK/ --sick SICK/SICK_test.txt --sick2pdsick2pd.json --out predictions.txt
+python3 main.py --pmb pmb_SICK/ --sick SICK/SICK_test.txt --sick2pd sick2pd.json --out predictions.txt
 ```
 
