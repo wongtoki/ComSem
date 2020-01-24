@@ -3,7 +3,7 @@ import pandas as pd
 
 class Loader:
     @staticmethod
-    def load_data(path: str):
+    def load_data(path: str, isTestData=False):
         """The path should a txt file containing sick data"""
         print("Loading data...")
         data = {}
@@ -14,6 +14,12 @@ class Loader:
             for row in file:
                 if i == 0:
                     labels = str(row).strip().split('\t')
+
+                    if isTestData:
+                        labels.pop()
+                        labels.pop()
+
+                    print(labels)
                     for l in labels:
                         data[l] = []
                 else:

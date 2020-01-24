@@ -35,10 +35,13 @@ class Model:
         pipe.fit(self.x, self.y)
         self.model = pipe
 
-    def test_model(self, x, y):
+    def test_model(self, x, y=None):
         self.prediction = self.model.predict(x)
-        print(classification_report(y, self.prediction))
-        return accuracy_score(y, self.prediction)
+        if y != None:
+            print(classification_report(y, self.prediction))
+            return accuracy_score(y, self.prediction)
+
+        return None
 
 
 class FeatureExtractor:
