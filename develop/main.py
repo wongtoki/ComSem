@@ -177,22 +177,22 @@ def main():
     m.train_model(RandomForestClassifier(
         n_estimators=900, criterion="entropy", max_depth=729))
 
-    try:
-        m.test_model(test, test["entailment_judgment"])
+    # try:
+    #     m.test_model(test, test["entailment_judgment"])
 
-        labels = m.model.classes_
-        cm = confusion_matrix(test["entailment_judgment"], m.prediction)
+    #     labels = m.model.classes_
+    #     cm = confusion_matrix(test["entailment_judgment"], m.prediction)
 
-        print_cm(cm, labels)
-    except KeyError:
+    #     print_cm(cm, labels)
+    # except:
 
-        m.test_model(test)
+    m.test_model(test)
 
-        with open("./filename_output.txt", "w+") as file:
-            for pred in m.prediction:
-                file.write(pred)
+    with open("./filename_output.txt", "w+") as file:
+        for pred in m.prediction:
+            file.write(pred)
 
-        print("Successfully generated prediction on test data.")
+    print("Successfully generated prediction on test data.")
 
 
 if __name__ == "__main__":

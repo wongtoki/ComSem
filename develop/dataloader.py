@@ -15,17 +15,16 @@ class Loader:
                 if i == 0:
                     labels = str(row).strip().split('\t')
 
-                    if isTestData:
-                        labels.pop()
-                        labels.pop()
-
-                    print(labels)
                     for l in labels:
                         data[l] = []
+
                 else:
                     contents = str(row).strip().split('\t')
-                    for x, c in enumerate(contents):
-                        data[labels[x]].append(c)
+                    for n in range(len(labels)):
+                        try:
+                            data[labels[n]].append(contents[n])
+                        except IndexError:
+                            data[labels[n]].append("None")
 
                 i += 1
 
