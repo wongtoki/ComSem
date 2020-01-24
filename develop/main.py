@@ -175,16 +175,17 @@ def main():
     m.add_feature(bag_of_words_plus_pos, "Feature")
 
     m.train_model(RandomForestClassifier(
-        n_estimators=1000, criterion="entropy", max_depth=100))
+        n_estimators=900, criterion="entropy", max_depth=729))
 
     m.test_model(test, test["entailment_judgment"])
 
     labels = m.model.classes_
     cm = confusion_matrix(test["entailment_judgment"], m.prediction)
 
-    print_cm(cm, labels, True)
+    print_cm(cm, labels)
 
 
 if __name__ == "__main__":
     # test()
+
     main()
