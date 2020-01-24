@@ -190,7 +190,7 @@ def main():
 
         with open("./filename_output.txt", "w+") as file:
             for pred in m.prediction:
-                file.write(pred)
+                file.write(pred + "\n")
 
         print("Successfully generated prediction on test data.")
 
