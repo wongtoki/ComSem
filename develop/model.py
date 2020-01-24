@@ -208,9 +208,6 @@ class NEGTransformer(object):
 
     def transform(self, X, y=None):
 
-        maxobj = max(X[self.column], key=len)
-
-        # maxlen = len(maxobj.split())
         maxlen = self.maxlen
 
         vecs = []
@@ -219,7 +216,7 @@ class NEGTransformer(object):
             negs = FeatureExtractor.negation_tagger(tokens.split())
 
             for n in negs:
-                if str(n).endswith("NEG"):
+                if str(n).endswith("_NEG"):
                     vectors.append(1)
                 else:
                     vectors.append(0)

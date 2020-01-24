@@ -1,6 +1,7 @@
 from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -11,6 +12,30 @@ from model import *
 
 import numpy
 import pandas as pd
+
+
+def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
+    """pretty print for confusion matrixes"""
+    columnwidth = max([len(x) for x in labels] + [5])  # 5 is value length
+    empty_cell = " " * columnwidth
+    # Print header
+    print("    " + empty_cell, end=" ")
+    for label in labels:
+        print("%{0}s".format(columnwidth) % label, end=" ")
+    print()
+    # Print rows
+    for i, label1 in enumerate(labels):
+        print("    %{0}s".format(columnwidth) % label1, end=" ")
+        for j in range(len(labels)):
+            cell = "%{0}.1f".format(columnwidth) % cm[i, j]
+            if hide_zeroes:
+                cell = cell if float(cm[i, j]) != 0 else empty_cell
+            if hide_diagonal:
+                cell = cell if i != j else empty_cell
+            if hide_threshold:
+                cell = cell if cm[i, j] > hide_threshold else empty_cell
+            print(cell, end=" ")
+        print()
 
 
 def search(features_comb, classifiers, data_train, data_test):
@@ -32,6 +57,7 @@ def search(features_comb, classifiers, data_train, data_test):
             m.train_model(classifier[0])
 
             acc = m.test_model(data_test, data_test["entailment_judgment"])
+
             comb_name = features[1]
             classifier_name = classifier[1]
 
@@ -94,10 +120,19 @@ def test():
     # Every classifiers should be put in a tuple with its name on the right hand side
     # You may tweak the hyperparameters
 
-    nb = (MultinomialNB(), "Naive Bayes")
+    nb = (MultinomialNB(alpha=0.1), "Naive Bayes")
     knn = (KNeighborsClassifier(), "KNN")
-    svm = (SVC(kernel="linear"), "SVM")
-    forest = (RandomForestClassifier(), "Random Forest")
+    svm = (SVC(kernel="linear", C=0.7), "SVM")
+    forest = (RandomForestClassifier(
+        n_estimators=1000, max_depth=128), "Random Forest")
+    mlp = (MLPClassifier(1000), "Multi layer Perceptrons")
+
+    classifiers = [nb, knn, svm, forest, mlp]
+
+    # for n in range(5, 10):
+    #     hyperforest = (RandomForestClassifier(
+    #         n_estimators=n*100, max_depth=n**3), f"Random Forest with {n*100} of estimators and a max depth of {n**3}")
+    #     classifiers.append(hyperforest)
 
     # Feature_combs
     # Feature combinations are a list of tuples
@@ -106,8 +141,12 @@ def test():
         ([bag_of_words], "TFIDF"),
         ([bag_of_words_plus_pos], "Combined + Postagging"),
         ([bag_of_words, postags_A, postags_B], "TFIDF + One hot postags"),
+        ([postags_A, postags_B], "OneHotPosTag only"),
         ([bag_of_words, negation_A, negation_B], "TFIDF + NEGATION"),
+        ([negation_A, negation_B], "NEGATION_ONLY"),
         ([bag_of_words, antons, synons], "TFIDF + ANTONYMS + SYNONYMS"),
+        ([bag_of_words, antons], "TFIDF + ANTONYMS"),
+        ([bag_of_words, synons], "TFIDF + SYNONYMS"),
         ([bag_of_words, postags_B, postags_A, negation_A,
           negation_B, antons, synons], "All features")
     ]
@@ -115,8 +154,37 @@ def test():
     # The seach function takes the combination, classifier list and the train test data.
     # The result will be printed and exported to a csv file called search result
     # It also returns the dictionary of all the accuracys
-    search(combs, [nb, knn, svm, forest], data, test)
+    search(combs, classifiers, data, test)
+
+
+def main():
+
+    # Final model
+    data = Loader.load_data("../NLI2FOLI/SICK/SICK_train.txt")
+    test = Loader.load_data("../NLI2FOLI/SICK/SICK_trial.txt")
+
+    data["postags"] = FeatureExtractor.postag_tokenizer(data["tokens"])
+    test["postags"] = FeatureExtractor.postag_tokenizer(test["tokens"])
+
+    # The countvectorizer features with postagging appended to each token
+    bag_of_words_plus_pos = ColumnTransformer([("POS", CountVectorizer(
+        tokenizer=lambda x:x, preprocessor=lambda x:x), "postags")])
+
+    m = Model(data)
+
+    m.add_feature(bag_of_words_plus_pos, "Feature")
+
+    m.train_model(RandomForestClassifier(
+        n_estimators=1000, criterion="entropy", max_depth=100))
+
+    m.test_model(test, test["entailment_judgment"])
+
+    labels = m.model.classes_
+    cm = confusion_matrix(test["entailment_judgment"], m.prediction)
+
+    print_cm(cm, labels, True)
 
 
 if __name__ == "__main__":
-    test()
+    # test()
+    main()
