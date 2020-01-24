@@ -7,11 +7,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from dataloader import Loader
 from sklearn.metrics import *
-
 from model import *
-
+import argparse
 import numpy
 import pandas as pd
+import dill as pickle
 
 
 def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
@@ -159,9 +159,17 @@ def test():
 
 def main():
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pmb")
+    parser.add_argument("--sick")
+    parser.add_argument("--sick2pd")
+    parser.add_argument("--out")
+    args = parser.parse_args()
+
     # Final model
     data = Loader.load_data("../NLI2FOLI/SICK/SICK_train.txt")
-    test = Loader.load_data("../NLI2FOLI/SICK/SICK_test.txt")
+    data = data.append(Loader.load_data("../NLI2FOLI/SICK/SICK_trial.txt"))
+    test = Loader.load_data(args.sick)
 
     data["postags"] = FeatureExtractor.postag_tokenizer(data["tokens"])
     test["postags"] = FeatureExtractor.postag_tokenizer(test["tokens"])
@@ -177,6 +185,12 @@ def main():
     m.train_model(RandomForestClassifier(
         n_estimators=900, criterion="entropy", max_depth=729))
 
+    with open('model.pkl', 'wb') as fid:
+        pickle.dump(m, fid)
+
+    with open('model.pkl', 'rb') as fid:
+        m = pickle.load(fid)
+
     try:
         m.test_model(test, test["entailment_judgment"])
 
@@ -188,9 +202,11 @@ def main():
 
         m.test_model(test)
 
-        with open("./filename_output.txt", "w+") as file:
-            for pred in m.prediction:
-                file.write(pred + "\n")
+        with open(args.out, "w") as file:
+            for idx, pred in enumerate(m.prediction):
+                pid = test.iloc[idx]['pair_ID']
+                file.write("{}:{}\n".format(pid,pred))
+                
 
         print("Successfully generated prediction on test data.")
 
